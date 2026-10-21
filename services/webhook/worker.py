@@ -1,0 +1,35 @@
+import httpx 
+from celery import Celery
+import os 
+
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+app = Celery("webhook", broker=redis_url, backend=redis_url)
+
+app.conf.task_routes = {
+    "analyze_pr": {"queue": "webhook"},
+    "trigger_learner": {"queue": "learning"}
+}
+
+@app.task(name="analyze_pr")
+async def analyze_pr(pr_number: int, repo_full_name: str, head_sha: str, installation_id: int):
+    with httpx.Client() as client:
+        client.post(
+            "http://localhost:8002/analyze",
+            json={
+                "pr_id": pr_id,
+                "pr_number": pr_number,
+                "repo_full_name": repo_full_name,
+                "head_sha": head_sha,
+                "installation_id": installation_id,
+            },
+            timeout=120,
+        )
+
+@app.task(name="trigger_learning")
+async def trigger_learner(pr_number: int, repo_full_name: str, head_sha: str, installation_id: int):
+    with httpx.Client() as client:
+        client.post(
+            "http://localhost:8004/learn",
+            json={"repo_full_name": repo_full_name, "pr_id": pr_id},
+            timeout=60,
+        )
