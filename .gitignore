@@ -1,1 +1,3 @@
 .env
+infra/k8s/configmap.yaml
+infra/k8s/secret.yaml
