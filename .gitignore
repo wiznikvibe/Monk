@@ -1,3 +1,6 @@
 .env
 infra/k8s/configmap.yaml
 infra/k8s/secret.yaml
+__pycache__/
+*.py[cod]
+.pytest_cache/
