@@ -36,7 +36,7 @@ async def recieve_event(request: Request):
             )
             pr = result.scalar_one_or_none()
             if pr:
-                trigger_learning.apply_aync(args=[repo_full_name, str(pr.id)], queue="learning")
+                trigger_learning.apply_async(args=[repo_full_name, str(pr.id)], queue="learning")
         return {"status": "accepted"}
     
     if action not in ("opened", "reopened", "synchronized"):

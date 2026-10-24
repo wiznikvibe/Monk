@@ -20,7 +20,7 @@ class PullRequest(Base):
     status = Column(Text, default="pending")
     created_at = Column(TIMESTAMP, nullable=False, default=func.now())
 
-class Findings(Base):
+class Finding(Base):
     __tablename__ = "findings"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -41,7 +41,7 @@ class Pattern(Base):
     frequency = Column(Integer, default=1)
     updated_at = Column(TIMESTAMP, nullable=False, default=func.now())
 
-class AnalyzeResult(BaseModel):
+class AnalyzeRequest(BaseModel):
     pr_id: uuid.UUID
     pr_number: int
     repo_full_name: str

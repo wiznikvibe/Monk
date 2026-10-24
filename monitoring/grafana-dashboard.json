@@ -36,9 +36,9 @@
       }
     ],
     "id": null,
-    "uid": "ai-code-reviewer",
-    "title": "AI Code Reviewer",
-    "tags": ["ai-code-reviewer"],
+    "uid": "pr-reviewer",
+    "title": "PR Reviewer",
+    "tags": ["pr-reviewer"],
     "timezone": "browser",
     "schemaVersion": 38,
     "version": 1,

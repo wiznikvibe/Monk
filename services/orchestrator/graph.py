@@ -2,7 +2,7 @@ import os
 import json
 import operator
 import re 
-from typing import TypeDict, Annotated 
+from typing import TypedDict, Annotated 
 
 from langfuse.openai import OpenAI
 from langgraph.graph import StateGraph, END

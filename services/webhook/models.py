@@ -1,7 +1,7 @@
 import uuid 
 from sqlalchemy import BigInteger, Column, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.exit.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy import TIMESTAMP 
 from pydantic_settings import BaseSettings
