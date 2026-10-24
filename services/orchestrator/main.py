@@ -79,12 +79,12 @@ async def get_installation_token(installation_id: int) -> str:
         "iss": settings.github_app_id,
     }
     
-    private_key - settings.github_app_private_key.replace("\\n", "\n")
+    private_key = settings.github_app_private_key.replace("\\n", "\n")
     encoded_jwt = jwt.encode(payload, private_key, algorithm="RS256")
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "https://api.github.com/app/installations/{installation_id}/access_tokens",
+            f"https://api.github.com/app/installations/{installation_id}/access_tokens",
             headers={
                 "Authorization": f"Bearer {encoded_jwt}",
                 "Accept": "application/vnd.github.v3+json",
