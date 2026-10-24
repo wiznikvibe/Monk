@@ -17,6 +17,7 @@ class PullRequest(Base):
     repo_full_name = Column(Text, nullable=False)
     head_sha = Column(Text, nullable=False)
     installation_id = Column(BigInteger, nullable=False)
+    status = Column(Text, nullable=False, server_default="pending")
     created_at = Column(TIMESTAMP, nullable=False, default=func.now())
 
 class ReviewRequest(BaseModel):
