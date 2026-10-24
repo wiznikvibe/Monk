@@ -22,7 +22,7 @@ Manual code review does not scale. Static linters catch syntax and style, but mi
 | Layer | Choices |
 | --- | --- |
 | **Languages / runtime** | Python 3.11, FastAPI, Uvicorn |
-| **AI / orchestration** | LangGraph (fan-out / merge graph), OpenAI-compatible client via xAI Grok (`grok-build-0.1`), Langfuse instrumentation |
+| **AI / orchestration** | LangGraph (fan-out / merge graph), OpenAI-compatible client via Google Gemini (`gemini-3.8-flash`), Langfuse instrumentation |
 | **Async jobs** | Celery workers, Redis broker (AWS ElastiCache) |
 | **Data** | PostgreSQL 15 (RDS), SQLAlchemy async + asyncpg, Alembic migrations |
 | **Auth / GitHub** | GitHub App (JWT → installation tokens), HMAC-SHA256 webhook verification |
@@ -106,7 +106,7 @@ The Celery worker then HTTP-calls the orchestrator (`POST /analyze`) so the Fast
                             END
 ```
 
-Each agent node calls Grok with a specialized system prompt and must return a JSON array of `{file, line, severity, message}`. The merge node deduplicates by `(file, line, agent, message)`. Findings are persisted, then handed to the reviewer.
+Each agent node calls Gemini with a specialized system prompt and must return a JSON array of `{file, line, severity, message}`. The merge node deduplicates by `(file, line, agent, message)`. Findings are persisted, then handed to the reviewer.
 
 **Example complexity:**
 - A SQL string built from request input may be flagged by **security** (injection) while the same function’s nesting depth is flagged by **static_analysis** — two agents, two findings, one merge.
@@ -220,7 +220,7 @@ flowchart TD
 
 ## Local / cluster notes
 
-- Configuration is injected via Kubernetes `ConfigMap` / `Secret` (database URL, Redis URL, GitHub App credentials, Grok/Langfuse keys).
+- Configuration is injected via Kubernetes `ConfigMap` / `Secret` (database URL, Redis URL, GitHub App credentials, Google Gemini/Langfuse keys).
 - Workers are separate Deployments (`webhook-worker`, `learner-worker`) so API pods and Celery consumers scale independently.
 - CI builds each service image to ECR and rolls the matching Deployment on `main`.
 

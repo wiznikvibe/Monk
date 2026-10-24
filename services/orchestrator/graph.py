@@ -9,8 +9,8 @@ from langgraph.graph import StateGraph, END
 from langgraph.constants import Send 
 
 client = OpenAI(
-    api_key=os.getenv("GROK_API_KEY"),
-    base_url="https://api.x.ai/v1"
+    api_key=os.getenv("GOOGLE_API_KEY"),
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
 )
 
 PROMPTS = {
@@ -405,7 +405,7 @@ def make_node(agent_name: str, get_prompt):
     def node(state: GraphState) -> dict:
         prompt = get_prompt(state) if callable(get_prompt) else get_prompt
         response = client.chat.completions.create(
-            model="grok-build-0.1",
+            model="gemini-3.8-flash",
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": state["diff"]},
