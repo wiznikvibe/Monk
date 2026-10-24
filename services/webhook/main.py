@@ -20,7 +20,7 @@ async def health_check():
 
 @app.post("/events", status_code=202)
 async def recieve_event(request: Request):
-    body = await request.body()
+    body = await request.json()
     action = body.get("action", "")
     pull_request = body.get("pull_request", {})
 
@@ -39,7 +39,7 @@ async def recieve_event(request: Request):
                 trigger_learning.apply_async(args=[repo_full_name, str(pr.id)], queue="learning")
         return {"status": "accepted"}
     
-    if action not in ("opened", "reopened", "synchronized"):
+    if action not in ("opened", "reopened", "synchronize"):
         return {"status": "skipped"}
     
     pr_number = pull_request.get("number")
@@ -58,7 +58,7 @@ async def recieve_event(request: Request):
         if result.scalar_one_or_none():
             return {"status": "already_processing"}
         
-        pr_record = PullRequeset(
+        pr_record = PullRequest(
             repo_full_name=repo_full_name,
             pr_number=pr_number,
             head_sha=head_sha,
