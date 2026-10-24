@@ -7,3 +7,4 @@ asyncpg
 celery
 redis
 prometheus-fastapi-instrumentator
+pytest

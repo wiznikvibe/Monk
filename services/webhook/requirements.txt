@@ -8,3 +8,4 @@ alembic
 celery
 redis
 prometheus-fastapi-instrumentator
+pytest
