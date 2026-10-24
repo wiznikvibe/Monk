@@ -7,3 +7,4 @@ asyncpg
 PyJWT
 cryptography
 prometheus-fastapi-instrumentator
+pytest
