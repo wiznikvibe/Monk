@@ -58,7 +58,8 @@ module "eks" {
 
   access_entries = {
     github-actions = {
-      principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/github-actions-ai-reviewer"
+      # Use the existing GitHub Actions OIDC role in this account
+      principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/github-actions-monk"
       policy_associations = {
         admin = {
           policy_arn   = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
@@ -271,7 +272,8 @@ resource "aws_iam_role_policy_attachment" "lbc" {
 }
 
 resource "aws_s3_bucket" "reports" {
-  bucket = "ai-code-reviewer-reports"
+  # S3 bucket names are globally unique; include account id to avoid BucketAlreadyExists
+  bucket = "${var.cluster_name}-reports-${data.aws_caller_identity.current.account_id}"
 
   tags = {
     Environment = var.environment

@@ -37,3 +37,8 @@ output "ecr_learner_url" {
   description = "ECR repository URL for learner"
   value       = aws_ecr_repository.learner.repository_url
 }
+
+output "reports_bucket" {
+  description = "S3 bucket for review reports"
+  value       = aws_s3_bucket.reports.bucket
+}
