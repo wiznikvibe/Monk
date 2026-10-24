@@ -59,7 +59,7 @@ async def analyze(request: AnalyzeRequest):
         await client.post(
             "http://reviewer:8003/post-review",
             json={
-                "pr_id": request.pr_id,
+                "pr_id": str(request.pr_id),
                 "pr_number": request.pr_number,
                 "repo_full_name": request.repo_full_name,
                 "head_sha": request.head_sha,
