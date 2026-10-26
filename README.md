@@ -4,6 +4,8 @@
 
 It is built as distributed FastAPI services with Celery workers, PostgreSQL, Redis, LangGraph orchestration, and Kubernetes/Terraform scaffolding. Treat this repository as an **engineering system under active development**—production-oriented pieces exist, but readiness depends on correct secrets, cluster wiring, and the known gaps called out below.
 
+![System Design](docs/architecture/final-pr-reviewer-demo.gif)
+
 ---
 
 ## Problem and motivation
