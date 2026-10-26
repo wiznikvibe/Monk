@@ -286,14 +286,3 @@ Documented from source review (not speculative roadmap marketing):
 | [Multi-agent review](docs/architecture/multi-agent-review.md) | [HTML](docs/architecture/diagrams/multi-agent-review.html) |
 | [Webhook error handling](docs/architecture/webhook-error-handling.md) | [HTML](docs/architecture/diagrams/webhook-error-handling.html) |
 | [Feedback learning](docs/architecture/feedback-learning.md) | [HTML](docs/architecture/diagrams/feedback-learning.html) |
-| [LinkedIn showcase draft](docs/linkedin-post.md) | — |
-
-Editable Archify JSON: `docs/architecture/diagrams/sources/`.
-
-Open the HTML files locally in a browser (GitHub’s markdown preview does not execute embedded Archify viewers).
-
----
-
-## License
-
-Proprietary / private — update this section if the project is open-sourced.
