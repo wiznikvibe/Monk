@@ -1,0 +1,436 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Monk Webhook Error Handling",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": "docs/architecture/diagrams/webhook-error-handling.html",
+    "repository": {
+      "url": "https://github.com/wiznikvibe/Monk.git",
+      "revision": "6fff47a81276d0e1cc00d3ca0c7041aaba008c0a",
+      "provider": "github"
+    }
+  },
+  "lanes": [
+    {
+      "id": "happy",
+      "label": "Happy path"
+    },
+    {
+      "id": "reject",
+      "label": "Reject / skip",
+      "variant": "exception"
+    },
+    {
+      "id": "recover",
+      "label": "Recovered failures"
+    },
+    {
+      "id": "gap",
+      "label": "Unhandled gaps",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "edge",
+      "label": "Edge",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "intake",
+      "label": "Intake",
+      "fromCol": 2,
+      "toCol": 3
+    },
+    {
+      "id": "async",
+      "label": "Analyze + publish",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "groups": [
+    {
+      "id": "recover_group",
+      "label": "Implemented recovery",
+      "lane": "recover",
+      "fromCol": 2,
+      "toCol": 5,
+      "variant": "dashed"
+    },
+    {
+      "id": "gap_group",
+      "label": "Missing retries",
+      "lane": "gap",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "recv",
+    "hmac",
+    "route",
+    "persist",
+    "queue",
+    "analyze"
+  ],
+  "nodes": [
+    {
+      "id": "recv",
+      "lane": "happy",
+      "col": 0,
+      "type": "external",
+      "label": "Webhook in",
+      "sublabel": "Gateway body",
+      "sources": [
+        {
+          "path": "services/gateway/main.py",
+          "line": 20,
+          "end_line": 23,
+          "label": "read body"
+        }
+      ]
+    },
+    {
+      "id": "hmac",
+      "lane": "happy",
+      "col": 1,
+      "type": "security",
+      "label": "HMAC check",
+      "sublabel": "sha256 compare",
+      "sources": [
+        {
+          "path": "services/gateway/main.py",
+          "line": 25,
+          "end_line": 35,
+          "label": "compare_digest"
+        }
+      ]
+    },
+    {
+      "id": "route",
+      "lane": "happy",
+      "col": 2,
+      "type": "backend",
+      "label": "Route action",
+      "sublabel": "POST /events",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 21,
+          "end_line": 43,
+          "label": "action branches"
+        }
+      ]
+    },
+    {
+      "id": "persist",
+      "lane": "happy",
+      "col": 3,
+      "type": "database",
+      "label": "Dedupe insert",
+      "sublabel": "repo+pr+sha",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 50,
+          "end_line": 71,
+          "label": "select + insert"
+        }
+      ]
+    },
+    {
+      "id": "queue",
+      "lane": "happy",
+      "col": 4,
+      "type": "messagebus",
+      "label": "Enqueue",
+      "sublabel": "analyze_pr",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 73,
+          "end_line": 74,
+          "label": "apply_async"
+        }
+      ]
+    },
+    {
+      "id": "analyze",
+      "lane": "happy",
+      "col": 5,
+      "type": "backend",
+      "label": "Analyze",
+      "sublabel": "LangGraph",
+      "sources": [
+        {
+          "path": "services/orchestrator/main.py",
+          "line": 26,
+          "end_line": 56,
+          "label": "analyze + findings"
+        }
+      ]
+    },
+    {
+      "id": "publish",
+      "lane": "recover",
+      "col": 5,
+      "type": "backend",
+      "label": "Publish",
+      "sublabel": "status reviewed",
+      "sources": [
+        {
+          "path": "services/reviewer/main.py",
+          "line": 65,
+          "end_line": 87,
+          "label": "post + update"
+        }
+      ]
+    },
+    {
+      "id": "bad_sig",
+      "lane": "reject",
+      "col": 1,
+      "type": "security",
+      "label": "401 reject",
+      "sublabel": "stop at edge",
+      "sources": [
+        {
+          "path": "services/gateway/main.py",
+          "line": 34,
+          "end_line": 35,
+          "label": "HTTP 401"
+        }
+      ]
+    },
+    {
+      "id": "skip",
+      "lane": "reject",
+      "col": 2,
+      "type": "backend",
+      "label": "Skipped",
+      "sublabel": "other actions",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 42,
+          "end_line": 43,
+          "label": "status skipped"
+        }
+      ]
+    },
+    {
+      "id": "dup",
+      "lane": "recover",
+      "col": 3,
+      "type": "database",
+      "label": "Duplicate",
+      "sublabel": "already_processing",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 58,
+          "end_line": 59,
+          "label": "already_processing"
+        }
+      ]
+    },
+    {
+      "id": "soft_json",
+      "lane": "recover",
+      "col": 4,
+      "type": "security",
+      "label": "Bad JSON",
+      "sublabel": "agent \u2192 []",
+      "sources": [
+        {
+          "path": "services/orchestrator/graph.py",
+          "line": 387,
+          "end_line": 395,
+          "label": "parse fail"
+        }
+      ]
+    },
+    {
+      "id": "fallback_422",
+      "lane": "reject",
+      "col": 5,
+      "type": "backend",
+      "label": "422 fallback",
+      "sublabel": "summary only",
+      "sources": [
+        {
+          "path": "services/reviewer/main.py",
+          "line": 73,
+          "end_line": 79,
+          "label": "422 retry"
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "lane": "gap",
+      "col": 5,
+      "type": "backend",
+      "label": "Empty findings",
+      "sublabel": "no status update",
+      "sources": [
+        {
+          "path": "services/reviewer/main.py",
+          "line": 39,
+          "end_line": 40,
+          "label": "early return"
+        }
+      ]
+    },
+    {
+      "id": "no_retry",
+      "lane": "gap",
+      "col": 4,
+      "type": "messagebus",
+      "label": "No Celery retry",
+      "sublabel": "raise and stop",
+      "sources": [
+        {
+          "path": "services/webhook/worker.py",
+          "line": 13,
+          "end_line": 26,
+          "label": "no retry config"
+        },
+        {
+          "path": "services/gateway/main.py",
+          "line": 44,
+          "end_line": 44,
+          "label": "raise_for_status"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "recv",
+      "to": "hmac",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2",
+      "from": "hmac",
+      "to": "route",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e3",
+      "from": "hmac",
+      "to": "bad_sig",
+      "label": "mismatch",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "e4",
+      "from": "route",
+      "to": "persist",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "route",
+      "to": "skip",
+      "label": "other",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e6",
+      "from": "persist",
+      "to": "queue",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e7",
+      "from": "persist",
+      "to": "dup",
+      "label": "same SHA",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e8",
+      "from": "queue",
+      "to": "analyze",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e9",
+      "from": "analyze",
+      "to": "publish",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e10",
+      "from": "analyze",
+      "to": "soft_json",
+      "label": "parse fail",
+      "variant": "dashed",
+      "role": "error"
+    },
+    {
+      "id": "e14",
+      "from": "analyze",
+      "to": "empty",
+      "label": "[]",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e15",
+      "from": "queue",
+      "to": "no_retry",
+      "label": "HTTP fail",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "e12",
+      "from": "publish",
+      "to": "fallback_422",
+      "label": "422",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Implemented recovery",
+      "items": [
+        "Invalid signatures are rejected at the gateway (401)",
+        "Duplicate SHA deliveries short-circuit without re-enqueue",
+        "GitHub 422 on inline comments retries summary-only"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Soft / silent paths",
+      "items": [
+        "Unsupported actions return skipped",
+        "Malformed agent JSON becomes an empty list for that agent",
+        "Empty findings return ok without marking PR reviewed"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Missing recovery",
+      "items": [
+        "No Celery autoretry/backoff on analyze_pr or trigger_learning",
+        "Gateway raise_for_status propagates webhook upstream failures",
+        "Orchestrator and Reviewer use raise_for_status without fallbacks"
+      ]
+    }
+  ]
+}

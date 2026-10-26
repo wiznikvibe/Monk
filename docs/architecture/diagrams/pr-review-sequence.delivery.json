@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "ecbfbff7-0fff-4713-860b-ef0b19bf37dd",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "/home/kai/repo/monk/.archify/sequence-pr-lifecycle-20261026-175326/candidate.json",
+  "output": "/home/kai/repo/monk/docs/architecture/diagrams/pr-review-sequence.html",
+  "specification": {
+    "sha256": "0b570e302790adb818e6dfaeae216a265b660b7c84825ca22bfaf4dbf80e195b",
+    "bytes": 7166
+  },
+  "artifact": {
+    "sha256": "25504afaa86609dacd5abc7ff276cfa47b8ed0da089d2fcc55cf105e2c716cd9",
+    "bytes": 847940
+  }
+}

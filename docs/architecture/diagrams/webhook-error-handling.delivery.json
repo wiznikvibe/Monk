@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0f9d7940-e60b-4f02-afc8-be29e8c68591",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "/home/kai/repo/monk/.archify/lifecycle-webhook-errors-20261026-175326/candidate.json",
+  "output": "/home/kai/repo/monk/docs/architecture/diagrams/webhook-error-handling.html",
+  "specification": {
+    "sha256": "4cf9ae3c45e5e2032510c8d6aad48394a450adacdfdb6d80965e5bf2e1d4e022",
+    "bytes": 9096
+  },
+  "artifact": {
+    "sha256": "158d9f6b44ddd227e74ffdf9534950c8cc1769985b44c99255664aa43d4e1c88",
+    "bytes": 856474
+  }
+}

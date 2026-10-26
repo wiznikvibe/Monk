@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "de1d8fee-8f40-480e-abff-b572ae14e3b1",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/home/kai/repo/monk/.archify/architecture-system-20261026-175326/candidate.json",
+  "output": "/home/kai/repo/monk/docs/architecture/diagrams/system-architecture.html",
+  "specification": {
+    "sha256": "17e2c4ab2d2c64ad537728d61fa0b716c18dd192c0142f672d5204d2b03f0434",
+    "bytes": 8920
+  },
+  "artifact": {
+    "sha256": "669af6ad1103325d172caf59e50d5ec26f55ab4b31fc54f17fb225d3dfb41080",
+    "bytes": 867288
+  }
+}

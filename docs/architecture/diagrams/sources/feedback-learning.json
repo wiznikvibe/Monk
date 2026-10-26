@@ -1,0 +1,278 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Monk Feedback-Learning Lifecycle",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": "docs/architecture/diagrams/feedback-learning.html",
+    "repository": {
+      "url": "https://github.com/wiznikvibe/Monk.git",
+      "revision": "6fff47a81276d0e1cc00d3ca0c7041aaba008c0a",
+      "provider": "github"
+    }
+  },
+  "mainPath": [
+    "merged",
+    "queued",
+    "learn",
+    "patterns",
+    "next_review"
+  ],
+  "states": [
+    {
+      "id": "merged",
+      "type": "start",
+      "label": "PR Merged",
+      "sublabel": "action=closed ",
+      "tag": "trigger",
+      "step": "01",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 27,
+          "end_line": 40,
+          "label": "merged branch"
+        }
+      ]
+    },
+    {
+      "id": "lookup",
+      "type": "decision",
+      "label": "Lookup PR Row",
+      "sublabel": "repo + pr_numb",
+      "tag": "postgres",
+      "step": "02",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 30,
+          "end_line": 37,
+          "label": "select PullRequest"
+        }
+      ]
+    },
+    {
+      "id": "queued",
+      "type": "active",
+      "label": "Learning Queued",
+      "sublabel": "trigger_learni",
+      "tag": "Q:learning",
+      "step": "03",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 38,
+          "end_line": 39,
+          "label": "apply_async"
+        },
+        {
+          "path": "services/webhook/worker.py",
+          "line": 28,
+          "end_line": 35,
+          "label": "task HTTP call"
+        }
+      ]
+    },
+    {
+      "id": "learn",
+      "type": "active",
+      "label": "POST /learn",
+      "sublabel": "Learner API",
+      "tag": ":8004",
+      "step": "04",
+      "sources": [
+        {
+          "path": "services/learner/main.py",
+          "line": 24,
+          "end_line": 34,
+          "label": "select findings"
+        }
+      ]
+    },
+    {
+      "id": "patterns",
+      "type": "success",
+      "label": "Patterns Upserted",
+      "sublabel": "warning + erro",
+      "tag": "frequency+",
+      "step": "05",
+      "sources": [
+        {
+          "path": "services/learner/main.py",
+          "line": 36,
+          "end_line": 51,
+          "label": "ON CONFLICT upsert"
+        },
+        {
+          "path": "db/migrations/versions/0001_initial.py",
+          "line": 60,
+          "end_line": 79,
+          "label": "patterns unique"
+        }
+      ]
+    },
+    {
+      "id": "next_review",
+      "type": "success",
+      "label": "Next Style Review",
+      "sublabel": "top-10 pattern",
+      "tag": "closed loo",
+      "step": "06",
+      "sources": [
+        {
+          "path": "services/orchestrator/main.py",
+          "line": 31,
+          "end_line": 40,
+          "label": "load patterns"
+        },
+        {
+          "path": "services/orchestrator/graph.py",
+          "line": 420,
+          "end_line": 422,
+          "label": "style prompt"
+        }
+      ]
+    },
+    {
+      "id": "no_pr",
+      "type": "neutral",
+      "label": "No Prior PR Row",
+      "sublabel": "accept without",
+      "tag": "silent",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 38,
+          "end_line": 40,
+          "label": "if pr: enqueue"
+        }
+      ]
+    },
+    {
+      "id": "no_findings",
+      "type": "neutral",
+      "label": "No Findings",
+      "sublabel": "commit empty w",
+      "tag": "noop",
+      "sources": [
+        {
+          "path": "services/learner/main.py",
+          "line": 27,
+          "end_line": 53,
+          "label": "filter + return ok"
+        }
+      ]
+    },
+    {
+      "id": "worker_gap",
+      "type": "failure",
+      "label": "Consumer Gap",
+      "sublabel": "learner worker",
+      "tag": "deploy ris",
+      "sources": [
+        {
+          "path": "services/learner/worker.py",
+          "line": 1,
+          "end_line": 8,
+          "label": "routes only"
+        },
+        {
+          "path": "infra/k8s/learner-worker.yaml",
+          "line": 16,
+          "end_line": 18,
+          "label": "celery -Q learning"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "l1",
+      "from": "merged",
+      "to": "lookup",
+      "label": "closed+mer"
+    },
+    {
+      "id": "l2",
+      "from": "lookup",
+      "to": "queued",
+      "label": "PR found"
+    },
+    {
+      "id": "l3",
+      "from": "lookup",
+      "to": "no_pr",
+      "label": "PR missing",
+      "variant": "dashed"
+    },
+    {
+      "id": "l4",
+      "from": "queued",
+      "to": "learn",
+      "label": "POST /lear"
+    },
+    {
+      "id": "l5",
+      "from": "queued",
+      "to": "worker_gap",
+      "label": "no task",
+      "variant": "security"
+    },
+    {
+      "id": "l6",
+      "from": "learn",
+      "to": "patterns",
+      "label": "upsert mes"
+    },
+    {
+      "id": "l7",
+      "from": "learn",
+      "to": "no_findings",
+      "label": "no warning",
+      "variant": "dashed"
+    },
+    {
+      "id": "l8",
+      "from": "patterns",
+      "to": "next_review",
+      "label": "future /an",
+      "variant": "emphasis"
+    },
+    {
+      "id": "t-m-q",
+      "from": "merged",
+      "to": "queued",
+      "label": "enqueue"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What is learned",
+      "items": [
+        "Only findings with severity warning or error become patterns",
+        "pattern_text is the finding message string",
+        "Unique key is (repo_full_name, pattern_text); frequency increments"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How it feeds reviews",
+      "items": [
+        "Orchestrator loads the ten highest-frequency patterns for the repo",
+        "Only the style agent prompt includes that list",
+        "Other agents do not receive learned patterns"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Implementation caveat",
+      "items": [
+        "trigger_learning is registered in webhook/worker.py",
+        "learner-worker Deployment runs learner image worker without that task",
+        "Production learning depends on which image actually consumes Q:learning"
+      ]
+    }
+  ]
+}

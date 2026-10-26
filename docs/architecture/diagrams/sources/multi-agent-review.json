@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Monk Multi-Agent LangGraph Review",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": "docs/architecture/diagrams/multi-agent-review.html",
+    "repository": {
+      "url": "https://github.com/wiznikvibe/Monk.git",
+      "revision": "6fff47a81276d0e1cc00d3ca0c7041aaba008c0a",
+      "provider": "github"
+    }
+  },
+  "components": [
+    {
+      "id": "analyze",
+      "type": "backend",
+      "label": "POST /analyze",
+      "sublabel": "token + diff fetch",
+      "pos": [40, 260],
+      "size": [130, 64],
+      "sources": [
+        { "path": "services/orchestrator/main.py", "line": 26, "end_line": 40, "label": "analyze entry" }
+      ]
+    },
+    {
+      "id": "patterns",
+      "type": "database",
+      "label": "Patterns",
+      "sublabel": "top 10 by frequency",
+      "pos": [40, 100],
+      "size": [130, 58],
+      "sources": [
+        { "path": "services/orchestrator/main.py", "line": 31, "end_line": 38, "label": "SELECT patterns" }
+      ]
+    },
+    {
+      "id": "fan_out",
+      "type": "messagebus",
+      "label": "fan_out",
+      "sublabel": "LangGraph Send × 4",
+      "pos": [220, 260],
+      "size": [130, 64],
+      "tag": "entry",
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 436, "end_line": 454, "label": "fan_out + entry" }
+      ]
+    },
+    {
+      "id": "static",
+      "type": "backend",
+      "label": "static_analysis",
+      "sublabel": "quality / complexity",
+      "pos": [420, 80],
+      "size": [140, 58],
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 448, "end_line": 448, "label": "register node" },
+        { "path": "services/orchestrator/graph.py", "line": 404, "end_line": 417, "label": "LLM node" }
+      ]
+    },
+    {
+      "id": "security",
+      "type": "security",
+      "label": "security",
+      "sublabel": "OWASP-oriented",
+      "pos": [420, 180],
+      "size": [140, 58],
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 449, "end_line": 449, "label": "register node" }
+      ]
+    },
+    {
+      "id": "style",
+      "type": "frontend",
+      "label": "style",
+      "sublabel": "patterns injected",
+      "pos": [420, 280],
+      "size": [140, 58],
+      "tag": "learned",
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 420, "end_line": 422, "label": "style prompt" },
+        { "path": "services/orchestrator/graph.py", "line": 450, "end_line": 450, "label": "register node" }
+      ]
+    },
+    {
+      "id": "architecture",
+      "type": "cloud",
+      "label": "architecture",
+      "sublabel": "design / reliability",
+      "pos": [420, 380],
+      "size": [140, 58],
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 451, "end_line": 451, "label": "register node" }
+      ]
+    },
+    {
+      "id": "gemini",
+      "type": "external",
+      "label": "Gemini",
+      "sublabel": "gemini-3.8-flash",
+      "pos": [800, 80],
+      "size": [120, 58],
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 11, "end_line": 14, "label": "client" },
+        { "path": "services/orchestrator/graph.py", "line": 407, "end_line": 413, "label": "completions" }
+      ]
+    },
+    {
+      "id": "parse",
+      "type": "security",
+      "label": "JSON parse",
+      "sublabel": "invalid → []",
+      "pos": [620, 180],
+      "size": [120, 58],
+      "tag": "soft fail",
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 387, "end_line": 395, "label": "parse_json_response" }
+      ]
+    },
+    {
+      "id": "merge",
+      "type": "backend",
+      "label": "merge",
+      "sublabel": "dedupe findings",
+      "pos": [620, 300],
+      "size": [120, 64],
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 425, "end_line": 433, "label": "merge_node" },
+        { "path": "services/orchestrator/graph.py", "line": 456, "end_line": 458, "label": "edges to merge" }
+      ]
+    },
+    {
+      "id": "findings",
+      "type": "database",
+      "label": "Findings",
+      "sublabel": "persist rows",
+      "pos": [800, 300],
+      "size": [120, 64],
+      "sources": [
+        { "path": "services/orchestrator/main.py", "line": 43, "end_line": 56, "label": "INSERT findings" }
+      ]
+    },
+    {
+      "id": "reviewer",
+      "type": "backend",
+      "label": "Reviewer",
+      "sublabel": "POST /post-review",
+      "pos": [980, 300],
+      "size": [120, 64],
+      "sources": [
+        { "path": "services/orchestrator/main.py", "line": 58, "end_line": 70, "label": "call reviewer" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "LangGraph compiled graph",
+      "wraps": ["fan_out", "static", "security", "style", "architecture", "parse", "merge"],
+      "pad": 16
+    }
+  ],
+  "connections": [
+    { "id": "a1", "from": "analyze", "to": "patterns", "label": "load", "fromSide": "top", "toSide": "bottom" },
+    { "id": "a2", "from": "analyze", "to": "fan_out", "label": "invoke graph", "variant": "emphasis" },
+    { "id": "a3", "from": "patterns", "to": "style", "label": "prompt ctx", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "a4", "from": "fan_out", "to": "static", "label": "Send", "variant": "emphasis", "fromSide": "top", "toSide": "left" },
+    { "id": "a5", "from": "fan_out", "to": "security", "label": "Send", "variant": "emphasis" },
+    { "id": "a6", "from": "fan_out", "to": "style", "label": "Send", "variant": "emphasis" },
+    { "id": "a7", "from": "fan_out", "to": "architecture", "label": "Send", "variant": "emphasis", "fromSide": "bottom", "toSide": "left" },
+    { "id": "a8", "from": "static", "to": "gemini", "label": "LLM", "variant": "dashed" },
+    { "id": "a9", "from": "security", "to": "parse", "label": "raw text", "variant": "dashed" },
+    { "id": "a10", "from": "static", "to": "merge", "fromSide": "right", "toSide": "left" },
+    { "id": "a11", "from": "security", "to": "merge", "fromSide": "right", "toSide": "left" },
+    { "id": "a12", "from": "style", "to": "merge" },
+    { "id": "a13", "from": "architecture", "to": "merge", "fromSide": "right", "toSide": "bottom" },
+    { "id": "a14", "from": "parse", "to": "merge", "label": "[] on fail", "variant": "dashed" },
+    { "id": "a15", "from": "merge", "to": "findings", "label": "deduped", "variant": "emphasis" },
+    { "id": "a16", "from": "findings", "to": "reviewer", "label": "publish", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Parallelism",
+      "items": [
+        "Conditional entry uses LangGraph Send to four agent nodes",
+        "Findings lists reduce with operator.add before merge",
+        "Agents are not sequenced; each edge into merge is independent"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Contracts",
+      "items": [
+        "Each finding: file, line, severity, message (+ agent tag)",
+        "Dedupe key: (file, line, agent, message)",
+        "Style prompt alone receives learned pattern text"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Soft failures",
+      "items": [
+        "Malformed LLM JSON becomes [] for that agent",
+        "No schema validation beyond JSON parse",
+        "Empty findings short-circuit Reviewer without status update"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "fda63e4a-c48f-471e-a246-e1c0a6f6580f",
+  "status": "current",
+  "command": "deliver",
+  "type": "lifecycle",
+  "input": "/home/kai/repo/monk/.archify/lifecycle-feedback-learning-20261026-175326/candidate.json",
+  "output": "/home/kai/repo/monk/docs/architecture/diagrams/feedback-learning.html",
+  "specification": {
+    "sha256": "d97a423e1fbc29318ec9fe053de055644041214314ccf8971f2d948e1b843557",
+    "bytes": 6293
+  },
+  "artifact": {
+    "sha256": "ab684118bff77599b09fb9c170e68a6cbc1145aa01100e8e636d644b2faeda66",
+    "bytes": 847342
+  }
+}

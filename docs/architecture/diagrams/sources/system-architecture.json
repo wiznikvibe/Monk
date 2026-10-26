@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Monk System Architecture",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": "docs/architecture/diagrams/system-architecture.html",
+    "repository": {
+      "url": "https://github.com/wiznikvibe/Monk.git",
+      "revision": "6fff47a81276d0e1cc00d3ca0c7041aaba008c0a",
+      "provider": "github"
+    }
+  },
+  "components": [
+    {
+      "id": "github",
+      "type": "external",
+      "label": "GitHub",
+      "sublabel": "PR webhooks + Reviews API",
+      "pos": [40, 300],
+      "size": [130, 64],
+      "sources": [
+        { "path": "services/gateway/main.py", "line": 20, "end_line": 45, "label": "webhook ingress" },
+        { "path": "services/reviewer/main.py", "line": 62, "end_line": 81, "label": "post review" }
+      ]
+    },
+    {
+      "id": "alb",
+      "type": "cloud",
+      "label": "ALB Ingress",
+      "sublabel": "internet-facing :80",
+      "pos": [200, 300],
+      "size": [120, 64],
+      "tag": "EKS",
+      "sources": [
+        { "path": "infra/k8s/ingress.yaml", "line": 1, "end_line": 21, "label": "gateway ingress" }
+      ]
+    },
+    {
+      "id": "gateway",
+      "type": "security",
+      "label": "Gateway",
+      "sublabel": "POST /webhook/github",
+      "pos": [350, 300],
+      "size": [130, 64],
+      "tag": ":8000",
+      "sources": [
+        { "path": "services/gateway/main.py", "line": 20, "end_line": 45, "label": "HMAC verify + forward" }
+      ]
+    },
+    {
+      "id": "webhook",
+      "type": "backend",
+      "label": "Webhook API",
+      "sublabel": "POST /events",
+      "pos": [520, 300],
+      "size": [130, 64],
+      "tag": ":8001",
+      "sources": [
+        { "path": "services/webhook/main.py", "line": 21, "end_line": 74, "label": "route + persist + enqueue" }
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "messagebus",
+      "label": "Redis",
+      "sublabel": "Celery broker",
+      "pos": [590, 150],
+      "size": [120, 58],
+      "tag": "queues",
+      "sources": [
+        { "path": "services/webhook/worker.py", "line": 5, "end_line": 11, "label": "broker + routes" },
+        { "path": "services/webhook/models.py", "line": 21, "end_line": 23, "label": "redis_url setting" }
+      ]
+    },
+    {
+      "id": "webhook_worker",
+      "type": "backend",
+      "label": "Webhook Worker",
+      "sublabel": "analyze_pr task",
+      "pos": [670, 300],
+      "size": [130, 64],
+      "tag": "Q:webhook",
+      "sources": [
+        { "path": "services/webhook/worker.py", "line": 13, "end_line": 26, "label": "analyze_pr HTTP call" },
+        { "path": "infra/k8s/webhook-worker.yaml", "line": 16, "end_line": 18, "label": "celery -Q webhook" }
+      ]
+    },
+    {
+      "id": "orchestrator",
+      "type": "backend",
+      "label": "Orchestrator",
+      "sublabel": "POST /analyze + LangGraph",
+      "pos": [840, 300],
+      "size": [140, 64],
+      "tag": ":8002",
+      "sources": [
+        { "path": "services/orchestrator/main.py", "line": 26, "end_line": 72, "label": "analyze endpoint" },
+        { "path": "services/orchestrator/graph.py", "line": 445, "end_line": 460, "label": "build_graph" }
+      ]
+    },
+    {
+      "id": "reviewer",
+      "type": "backend",
+      "label": "Reviewer",
+      "sublabel": "POST /post-review",
+      "pos": [1020, 300],
+      "size": [130, 64],
+      "tag": ":8003",
+      "sources": [
+        { "path": "services/reviewer/main.py", "line": 35, "end_line": 89, "label": "GitHub review + status" }
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "PRs · findings · patterns",
+      "pos": [840, 460],
+      "size": [140, 64],
+      "sources": [
+        { "path": "db/migrations/versions/0001_initial.py", "line": 20, "end_line": 79, "label": "schema" },
+        { "path": "services/orchestrator/main.py", "line": 31, "end_line": 56, "label": "patterns + findings I/O" }
+      ]
+    },
+    {
+      "id": "learner_worker",
+      "type": "backend",
+      "label": "Learner Worker",
+      "sublabel": "learning queue",
+      "pos": [590, 460],
+      "size": [130, 64],
+      "tag": "Q:learning",
+      "sources": [
+        { "path": "services/webhook/worker.py", "line": 28, "end_line": 35, "label": "trigger_learning task" },
+        { "path": "infra/k8s/learner-worker.yaml", "line": 16, "end_line": 18, "label": "celery -Q learning" }
+      ]
+    },
+    {
+      "id": "learner",
+      "type": "backend",
+      "label": "Learner API",
+      "sublabel": "POST /learn",
+      "pos": [420, 460],
+      "size": [130, 64],
+      "tag": ":8004",
+      "sources": [
+        { "path": "services/learner/main.py", "line": 24, "end_line": 53, "label": "pattern upsert" }
+      ]
+    },
+    {
+      "id": "gemini",
+      "type": "external",
+      "label": "Gemini API",
+      "sublabel": "gemini-3.8-flash",
+      "pos": [840, 80],
+      "size": [140, 58],
+      "sources": [
+        { "path": "services/orchestrator/graph.py", "line": 11, "end_line": 14, "label": "OpenAI-compatible client" },
+        { "path": "services/orchestrator/graph.py", "line": 404, "end_line": 417, "label": "agent LLM call" }
+      ]
+    },
+    {
+      "id": "observability",
+      "type": "cloud",
+      "label": "Observability",
+      "sublabel": "Prometheus · Langfuse",
+      "pos": [1020, 80],
+      "size": [130, 58],
+      "sources": [
+        { "path": "monitoring/prometheus.yml", "line": 1, "end_line": 33, "label": "scrape config" },
+        { "path": "services/gateway/main.py", "line": 14, "end_line": 14, "label": "Instrumentator" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Public trust boundary",
+      "wraps": ["alb", "gateway"],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "EKS application network",
+      "wraps": ["webhook", "redis", "webhook_worker", "orchestrator", "reviewer", "postgres", "learner_worker", "learner"],
+      "pad": 16
+    }
+  ],
+  "connections": [
+    { "id": "gh-alb", "from": "github", "to": "alb", "label": "PR webhook", "variant": "emphasis" },
+    { "id": "alb-gw", "from": "alb", "to": "gateway", "label": "HTTP /" },
+    { "id": "gw-wh", "from": "gateway", "to": "webhook", "label": "POST /events", "variant": "security" },
+    { "id": "wh-redis", "from": "webhook", "to": "redis", "label": "enqueue", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "redis-ww", "from": "redis", "to": "webhook_worker", "label": "analyze_pr", "variant": "dashed", "fromSide": "right", "toSide": "top" },
+    { "id": "ww-orch", "from": "webhook_worker", "to": "orchestrator", "label": "POST /analyze" },
+    { "id": "orch-llm", "from": "orchestrator", "to": "gemini", "label": "completions", "fromSide": "top", "toSide": "bottom" },
+    { "id": "orch-pg", "from": "orchestrator", "to": "postgres", "label": "findings", "fromSide": "bottom", "toSide": "top" },
+    { "id": "wh-pg", "from": "webhook", "to": "postgres", "label": "insert PR", "variant": "dashed", "fromSide": "bottom", "toSide": "left" },
+    { "id": "orch-rev", "from": "orchestrator", "to": "reviewer", "label": "POST /post-review" },
+    { "id": "rev-pg", "from": "reviewer", "to": "postgres", "label": "status=reviewed", "fromSide": "bottom", "toSide": "right" },
+    { "id": "rev-gh", "from": "reviewer", "to": "github", "label": "PR reviews API", "variant": "emphasis", "fromSide": "right", "toSide": "bottom" },
+    { "id": "redis-lw", "from": "redis", "to": "learner_worker", "label": "trigger_learning", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "lw-learner", "from": "learner_worker", "to": "learner", "label": "POST /learn" },
+    { "id": "learner-pg", "from": "learner", "to": "postgres", "label": "upsert patterns" },
+    { "id": "orch-obs", "from": "orchestrator", "to": "observability", "label": "metrics", "variant": "dashed", "fromSide": "top", "toSide": "left" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Sync edge, async core",
+      "items": [
+        "Gateway only verifies HMAC and forwards the raw body",
+        "Webhook persists work and enqueues Celery; workers call Orchestrator",
+        "Reviewer is the sole GitHub write path for PR comments"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Learning loop",
+      "items": [
+        "Merged PRs enqueue trigger_learning on the learning queue",
+        "Learner upserts warning/error findings into patterns",
+        "Orchestrator injects top-10 patterns into the style agent"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Verified gaps",
+      "items": [
+        "trigger_learning is defined in webhook/worker.py, not learner/worker.py",
+        "Service URLs are hardcoded in workers (ConfigMap URLs unused in code)",
+        "Infra manifests exist; local end-to-end readiness is unverified"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "24804165-36ec-43d7-8fdb-9007326d2226",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/home/kai/repo/monk/.archify/workflow-multi-agent-20261026-175326/candidate.json",
+  "output": "/home/kai/repo/monk/docs/architecture/diagrams/multi-agent-review.html",
+  "specification": {
+    "sha256": "c31b33263f9c426bc5dd2e725d0f7f52e9a71360ff886d8361e40c82e1b36303",
+    "bytes": 7430
+  },
+  "artifact": {
+    "sha256": "6f2061fbd6d5f66791ced8265d3f89544830f9d04c5835fbc4c4a7c2af7b9633",
+    "bytes": 861276
+  }
+}

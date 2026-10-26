@@ -1,0 +1,333 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Monk PR Review Sequence",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": "docs/architecture/diagrams/pr-review-sequence.html",
+    "repository": {
+      "url": "https://github.com/wiznikvibe/Monk.git",
+      "revision": "6fff47a81276d0e1cc00d3ca0c7041aaba008c0a",
+      "provider": "github"
+    }
+  },
+  "participants": [
+    {
+      "id": "github",
+      "type": "external",
+      "label": "GitHub",
+      "sublabel": "webhooks + API",
+      "sources": [
+        {
+          "path": "services/gateway/main.py",
+          "line": 20,
+          "end_line": 45,
+          "label": "receive webhook"
+        }
+      ]
+    },
+    {
+      "id": "gateway",
+      "type": "security",
+      "label": "Gateway",
+      "sublabel": ":8000",
+      "sources": [
+        {
+          "path": "services/gateway/main.py",
+          "line": 20,
+          "end_line": 45,
+          "label": "HMAC + forward"
+        }
+      ]
+    },
+    {
+      "id": "webhook",
+      "type": "backend",
+      "label": "Webhook",
+      "sublabel": ":8001",
+      "sources": [
+        {
+          "path": "services/webhook/main.py",
+          "line": 21,
+          "end_line": 74,
+          "label": "/events"
+        }
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "messagebus",
+      "label": "Redis",
+      "sublabel": "Celery",
+      "sources": [
+        {
+          "path": "services/webhook/worker.py",
+          "line": 5,
+          "end_line": 26,
+          "label": "queues + tasks"
+        }
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Worker",
+      "sublabel": "analyze_pr",
+      "sources": [
+        {
+          "path": "services/webhook/worker.py",
+          "line": 13,
+          "end_line": 26,
+          "label": "task body"
+        }
+      ]
+    },
+    {
+      "id": "orch",
+      "type": "backend",
+      "label": "Orchestrator",
+      "sublabel": ":8002",
+      "sources": [
+        {
+          "path": "services/orchestrator/main.py",
+          "line": 26,
+          "end_line": 72,
+          "label": "/analyze"
+        }
+      ]
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "Postgres",
+      "sublabel": "state store",
+      "sources": [
+        {
+          "path": "db/migrations/versions/0001_initial.py",
+          "line": 20,
+          "end_line": 79,
+          "label": "tables"
+        }
+      ]
+    },
+    {
+      "id": "reviewer",
+      "type": "backend",
+      "label": "Reviewer",
+      "sublabel": ":8003",
+      "sources": [
+        {
+          "path": "services/reviewer/main.py",
+          "line": 35,
+          "end_line": 89,
+          "label": "/post-review"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 400,
+      "label": "Ingress + enqueue"
+    },
+    {
+      "from": 410,
+      "to": 820,
+      "label": "Analyze (async)"
+    },
+    {
+      "from": 830,
+      "to": 1020,
+      "label": "Publish review"
+    }
+  ],
+  "messages": [
+    {
+      "id": "wh-deliver",
+      "from": "github",
+      "to": "gateway",
+      "y": 165,
+      "label": "POST /webhook/github",
+      "variant": "emphasis",
+      "note": "X-Hub-Signature-256 on raw body"
+    },
+    {
+      "id": "sig-ok",
+      "from": "gateway",
+      "to": "webhook",
+      "y": 230,
+      "label": "POST /events",
+      "variant": "security",
+      "note": "401 if HMAC fails"
+    },
+    {
+      "id": "insert-pr",
+      "from": "webhook",
+      "to": "pg",
+      "y": 300,
+      "label": "insert pull_requests",
+      "variant": "default",
+      "note": "dedupe on repo+pr_number+head_sha"
+    },
+    {
+      "id": "enqueue",
+      "from": "webhook",
+      "to": "redis",
+      "y": 370,
+      "label": "analyze_pr \u2192 Q:webhook",
+      "variant": "dashed"
+    },
+    {
+      "id": "accepted",
+      "from": "webhook",
+      "to": "gateway",
+      "y": 420,
+      "label": "202 accepted",
+      "variant": "return"
+    },
+    {
+      "id": "consume",
+      "from": "redis",
+      "to": "worker",
+      "y": 470,
+      "label": "deliver task",
+      "variant": "dashed"
+    },
+    {
+      "id": "call-analyze",
+      "from": "worker",
+      "to": "orch",
+      "y": 520,
+      "label": "POST /analyze",
+      "variant": "emphasis",
+      "note": "timeout 120s; includes installation_id"
+    },
+    {
+      "id": "gh-token",
+      "from": "orch",
+      "to": "github",
+      "y": 580,
+      "label": "installation access_tokens",
+      "variant": "security"
+    },
+    {
+      "id": "fetch-diff",
+      "from": "orch",
+      "to": "github",
+      "y": 640,
+      "label": "GET PR (vnd.github.v3.diff)",
+      "variant": "default"
+    },
+    {
+      "id": "load-patterns",
+      "from": "orch",
+      "to": "pg",
+      "y": 700,
+      "label": "SELECT patterns LIMIT 10",
+      "variant": "default"
+    },
+    {
+      "id": "persist-findings",
+      "from": "orch",
+      "to": "pg",
+      "y": 770,
+      "label": "INSERT findings",
+      "variant": "emphasis",
+      "note": "after LangGraph fan-out + merge"
+    },
+    {
+      "id": "call-review",
+      "from": "orch",
+      "to": "reviewer",
+      "y": 840,
+      "label": "POST /post-review",
+      "variant": "emphasis"
+    },
+    {
+      "id": "post-comments",
+      "from": "reviewer",
+      "to": "github",
+      "y": 910,
+      "label": "POST .../pulls/{n}/reviews",
+      "variant": "emphasis",
+      "note": "422 \u2192 summary-only"
+    },
+    {
+      "id": "mark-reviewed",
+      "from": "reviewer",
+      "to": "pg",
+      "y": 980,
+      "label": "status = reviewed",
+      "variant": "default"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "gateway",
+      "from": 160,
+      "to": 430,
+      "type": "security"
+    },
+    {
+      "participant": "webhook",
+      "from": 225,
+      "to": 425,
+      "type": "backend"
+    },
+    {
+      "participant": "redis",
+      "from": 365,
+      "to": 480,
+      "type": "messagebus"
+    },
+    {
+      "participant": "worker",
+      "from": 465,
+      "to": 530,
+      "type": "backend"
+    },
+    {
+      "participant": "orch",
+      "from": 515,
+      "to": 850,
+      "type": "backend"
+    },
+    {
+      "participant": "reviewer",
+      "from": 835,
+      "to": 1000,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Async boundary",
+      "items": [
+        "Webhook returns after enqueue; analysis runs on Celery",
+        "Dashed messages mark Redis queue hops",
+        "Worker is the only caller of Orchestrator /analyze"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "GitHub touchpoints",
+      "items": [
+        "Read path: App JWT \u2192 installation token \u2192 PR diff",
+        "Write path: Reviewer posts COMMENT event reviews",
+        "Inline comments use side=RIGHT; invalid lines fall back"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Not shown here",
+      "items": [
+        "closed+merged learning path is a separate lifecycle diagram",
+        "Invalid signatures never reach Webhook",
+        "Duplicate SHA deliveries return already_processing"
+      ]
+    }
+  ]
+}
