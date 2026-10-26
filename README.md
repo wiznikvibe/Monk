@@ -78,6 +78,8 @@ Merged PRs take the learning path documented in [feedback-learning.md](docs/arch
 Interactive Archify diagram: **[Multi-agent review](docs/architecture/diagrams/multi-agent-review.html)**  
 Narrative: [docs/architecture/multi-agent-review.md](docs/architecture/multi-agent-review.md)
 
+![Demo Architecture](docs/architecture/final-pr-reviewer-demo.gif)
+
 LangGraph entry `fan_out` issues four parallel `Send`s:
 
 | Agent | Focus |
